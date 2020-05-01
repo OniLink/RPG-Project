@@ -31,8 +31,10 @@ func getMotion():
 	var velocity = Vector2( 0, 0 )
 	velocity.x = Input.get_action_strength( \"pl_right\" ) - Input.get_action_strength( \"pl_left\" )
 	velocity.y = Input.get_action_strength( \"pl_down\" ) - Input.get_action_strength( \"pl_up\" )
+	if velocity.length_squared() > 1:
+		velocity = velocity.normalized()
 	
-	return velocity.normalized() * VELOCITY_WALK
+	return velocity * VELOCITY_WALK
 "
 
 [sub_resource type="CircleShape2D" id=2]
