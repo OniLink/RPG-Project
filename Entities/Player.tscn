@@ -1,0 +1,48 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Sprites/Placeholder-32x32.png" type="Texture" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends KinematicBody2D
+
+
+const VELOCITY_WALK = 200
+const VELOCITY_RUN_MOD = 1.5
+
+
+# Initialize the player
+func _ready():
+	pass
+
+
+# Frame update
+#func _process( delta ):
+#	pass
+
+
+# Physics update
+func _physics_process( _delta ):
+	var velocity = getMotion()
+	velocity = move_and_slide( velocity )
+
+
+# Get the motion-related input
+func getMotion():
+	var velocity = Vector2( 0, 0 )
+	velocity.x = Input.get_action_strength( \"pl_right\" ) - Input.get_action_strength( \"pl_left\" )
+	velocity.y = Input.get_action_strength( \"pl_down\" ) - Input.get_action_strength( \"pl_up\" )
+	
+	return velocity.normalized() * VELOCITY_WALK
+"
+
+[sub_resource type="CircleShape2D" id=2]
+radius = 16.0
+
+[node name="player" type="KinematicBody2D"]
+script = SubResource( 1 )
+
+[node name="sprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+
+[node name="collisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 2 )
