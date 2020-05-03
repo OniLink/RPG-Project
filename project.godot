@@ -77,8 +77,10 @@ pl_melee={
 
 [layer_names]
 
-2d_physics/layer_1="Hitbox"
-2d_physics/layer_2="Hurtbox"
+2d_physics/layer_1="Player Hitbox"
+2d_physics/layer_2="Player Hurtbox"
+2d_physics/layer_3="Enemy Hitbox"
+2d_physics/layer_4="Enemy Hurtbox"
 
 [rendering]
 
