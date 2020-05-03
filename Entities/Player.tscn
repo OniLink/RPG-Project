@@ -1,13 +1,28 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://Sprites/Placeholder-32x32.png" type="Texture" id=1]
+[ext_resource path="res://Sprites/Placeholder-8x32.png" type="Texture" id=2]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends KinematicBody2D
 
 
+enum State {
+	DEFAULT,
+	MELEE
+}
+
+
 const VELOCITY_WALK = 200
 const VELOCITY_RUN_MOD = 1.5
+
+
+var _state = State.DEFAULT
+
+
+onready var AnimationTree = $AnimationTree
+onready var AnimationStateMachine = AnimationTree[ \"parameters/playback\" ]
+onready var sword_pivot = $SwordPivot
 
 
 # Initialize the player
@@ -22,12 +37,16 @@ func _ready():
 
 # Physics update
 func _physics_process( _delta ):
-	var velocity = getMotion()
-	velocity = move_and_slide( velocity )
+	match _state:
+		State.DEFAULT:
+			_state_default()
+		
+		State.MELEE:
+			_state_melee()
 
 
 # Get the motion-related input
-func getMotion():
+func get_motion():
 	var velocity = Vector2( 0, 0 )
 	velocity.x = Input.get_action_strength( \"pl_right\" ) - Input.get_action_strength( \"pl_left\" )
 	velocity.y = Input.get_action_strength( \"pl_down\" ) - Input.get_action_strength( \"pl_up\" )
@@ -35,16 +54,133 @@ func getMotion():
 		velocity = velocity.normalized()
 	
 	return velocity * VELOCITY_WALK
+
+
+func _state_default():
+	# Get the motion
+	var velocity = get_motion()
+	
+	# Update the animation
+	sword_pivot.rotation = velocity.angle()
+	
+	# Move the player
+	velocity = move_and_slide( velocity )
+	
+	# Update the state if needed
+	if Input.is_action_just_pressed( \"pl_melee\" ):
+		AnimationStateMachine.travel( \"Attack\" )
+		_state = State.MELEE
+
+
+func _state_melee():
+	# Return to default after the animation ends
+	if AnimationStateMachine.get_current_node() != \"Attack\":
+		_state = State.DEFAULT
 "
 
 [sub_resource type="CircleShape2D" id=2]
 radius = 16.0
 
-[node name="player" type="KinematicBody2D"]
+[sub_resource type="RectangleShape2D" id=3]
+extents = Vector2( 16, 2 )
+
+[sub_resource type="AnimationNodeAnimation" id=10]
+animation = "Attack"
+
+[sub_resource type="AnimationNodeAnimation" id=11]
+animation = "Idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=12]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=13]
+switch_mode = 2
+auto_advance = true
+
+[sub_resource type="AnimationNodeStateMachine" id=14]
+states/Attack/node = SubResource( 10 )
+states/Attack/position = Vector2( 543, 148 )
+states/Idle/node = SubResource( 11 )
+states/Idle/position = Vector2( 227, 148 )
+transitions = [ "Idle", "Attack", SubResource( 12 ), "Attack", "Idle", SubResource( 13 ) ]
+start_node = "Idle"
+
+[sub_resource type="AnimationNodeStateMachinePlayback" id=15]
+
+[sub_resource type="Animation" id=8]
+length = 0.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("SwordPivot/RotationHelper/SwordSprite:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("SwordPivot/RotationHelper:rotation_degrees")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ -45.0, 45.0 ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("SwordPivot/RotationHelper/HitBox/CollisionShape2D:disabled")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ false, true ]
+}
+
+[sub_resource type="Animation" id=9]
+
+[node name="Player" type="KinematicBody2D"]
 script = SubResource( 1 )
 
-[node name="sprite" type="Sprite" parent="."]
+[node name="Sprite" type="Sprite" parent="."]
 texture = ExtResource( 1 )
 
-[node name="collisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 2 )
+
+[node name="SwordPivot" type="Position2D" parent="."]
+
+[node name="RotationHelper" type="Node2D" parent="SwordPivot"]
+rotation = 0.785398
+
+[node name="SwordSprite" type="Sprite" parent="SwordPivot/RotationHelper"]
+visible = false
+position = Vector2( 16, 0 )
+texture = ExtResource( 2 )
+offset = Vector2( 16, 0 )
+
+[node name="HitBox" type="Area2D" parent="SwordPivot/RotationHelper"]
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordPivot/RotationHelper/HitBox"]
+position = Vector2( 32, 0 )
+shape = SubResource( 3 )
+disabled = true
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+tree_root = SubResource( 14 )
+anim_player = NodePath("../AnimationPlayer")
+active = true
+parameters/playback = SubResource( 15 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/Attack = SubResource( 8 )
+anims/Idle = SubResource( 9 )
