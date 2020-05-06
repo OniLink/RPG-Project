@@ -1,0 +1,109 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Sprites/Textbox.png" type="Texture" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends CanvasLayer
+
+# Planning Notes:
+# Users will implement dialogue by repeatedly calling DialogueBox public methods
+# Sample:
+# .start()
+# .set_avatar( icon )
+# .say( \"Hello\" )
+# .set_text_speed( 16 )
+# .say( \"World\" )
+# .proceed()
+# .say( \"Goodbye\" )
+# .stop()
+# 
+# Internally these will be executed one at a time
+# Ideally: Calling script is paused upon each calling function, not resuming until ready
+# HOWEVER! Need to analyze yield to see if that's possible
+# To Pause a CALLING function without pausing execution
+# Somehow yielding *twice* up the call stack
+#
+# ALTERNATIVE:
+# .get_input( type, var_to_store_input )
+# yield( DialogueEngine, \"queue_flushed\" )
+# Where the \"queue_flushed\" signal emits when the queue has emptied
+# And the .get_input stores the user input in the specified variable
+# Caveat: need to pass variable by reference
+# Or can store it in an internal variable array?
+# Store it in an internal variable array sounds perfect
+# .get_input( type, \"variable name\" )
+# .access_variable( \"variable_name\" )
+
+
+
+var _queue = []
+var _current_state = null
+
+var _running = false
+
+onready var DialogueBoxBG = $BoxBG
+
+
+func _ready():
+	pass
+
+
+func _process( delta ):
+	# Execute the state
+	var finished = false
+	
+	while not finished:
+		# Pop a state off the queue if needed
+		if not( _current_state is GDScriptFunctionState and _current_state.is_valid() ):
+			_current_state = call( _queue.pop_front(), delta )
+		# Otherwise continue the current state
+		else:
+			_current_state = _current_state.resume( delta )
+			
+		# If the state got yielded, we're done
+		finished = _current_state is GDScriptFunctionState and _current_state.is_valid()
+
+
+##############
+# PUBLIC API #
+##############
+
+# Start the dialogue engine
+func start():
+	_queue.push_back( \"_start_dialogue\" )
+
+
+# Stop the dialogue engine
+func stop():
+	_queue.push_back( \"_stop_dialogue\" )
+
+
+###############
+# PRIVATE API #
+###############
+
+func _start_dialogue( _delta ):
+	_running = true
+	_set_dialogue_visible( true )
+
+
+func _stop_dialogue( _delta ):
+	_running = false
+	_set_dialogue_visible( false )
+
+
+# Set whether the dialogue is visible or not
+func _set_dialogue_visible( visibility ):
+	DialogueBoxBG.visible = visibility
+"
+
+[node name="Dialogue" type="CanvasLayer"]
+script = SubResource( 1 )
+
+[node name="BoxBG" type="TextureRect" parent="."]
+visible = false
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -108.0
+texture = ExtResource( 1 )

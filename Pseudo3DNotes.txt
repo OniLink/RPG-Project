@@ -1,0 +1,4 @@
+Pseudo-3D Height Design:
+Treat everything as "flat"
+Use Area2Ds as ramps when necessary to split an area into multiple sections
+Use Area2Ds to mark falling points which drag the player down
