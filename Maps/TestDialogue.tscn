@@ -6,20 +6,26 @@
 script/source = "extends Node2D
 
 
+var _test_avatar = ImageTexture.new()
+
 onready var Dia = $Dialogue
 
 
 func _ready():
-	pass
+	_test_avatar.load( \"res://Sprites/Test-Avatar.png\" )
 
 
 func _process( _delta ):
 	if Input.is_action_just_pressed( \"ui_accept\" ) and not Dia.is_running():
 		Dia.start()
 		Dia.set_text_speed( 60 )
+		Dia.set_name( \"Test Speaker\" )
 		Dia.say( \"Hello World! Testing!\" )
 		Dia.proceed()
+		Dia.set_avatar( _test_avatar )
 		Dia.say( \"This is an experiment.\\n\" )
+		Dia.set_text_speed( 30 )
+		Dia.set_avatar( null )
 		Dia.say( \"Let's try [rainbow][wave amp=50]BBCode!!![/wave][/rainbow]\" )
 		Dia.proceed()
 		Dia.stop()
