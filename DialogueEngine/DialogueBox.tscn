@@ -16,7 +16,6 @@ signal point_reached
 
 var _queue = []
 var _current_state = null
-var _current_args = null
 
 var _variables = {}
 
@@ -45,9 +44,9 @@ func _process( delta ):
 		# Pop a state off the queue if needed
 		elif not _queue.empty():
 			var next_state = _queue.pop_front()
-			_current_args = next_state[ 1 ]
-			_current_args.push_front( delta )
-			_current_state = next_state.call_funcv( _current_args )
+			var args = next_state[ 1 ]
+			args.push_front( delta )
+			_current_state = callv( next_state[ 0 ], args )
 			
 			state_updated = true
 			
@@ -69,39 +68,43 @@ func _process( delta ):
 # .set_avatar( icon )
 # .get_input( type, variable_name )
 
+# Check if the dialogue engine is running
+func is_running():
+	return _running
+
 # Start the dialogue engine
 func start():
-	_queue.push_back( [ funcref( self, \"_start_dialogue\" ), [] ] )
+	_queue.push_back( [ \"_start_dialogue\", [] ] )
 
 
 # Stop the dialogue engine
 func stop():
-	_queue.push_back( [ funcref( self, \"_stop_dialogue\" ), [] ] )
+	_queue.push_back( [ \"_stop_dialogue\", [] ] )
 
 
 # Say something to the dialogue box
 func say( text ):
-	_queue.push_back( [ funcref( self, \"_say\" ), [ text ] ] )
+	_queue.push_back( [ \"_say\", [ text ] ] )
 
 
 # Set how fast the text is typed
 func set_text_speed( speed ):
-	_queue.push_back( [ funcref( self, \"_set_text_speed\" ), [ speed ] ] )
+	_queue.push_back( [ \"_set_text_speed\", [ speed ] ] )
 
 
 # Wait for the player to proceed, then clear the dialogue box
 func proceed():
-	_queue.push_back( [ funcref( self, \"_proceed\" ), [] ] )
+	_queue.push_back( [ \"_proceed\", [] ] )
 
 
 # Wait some seconds before the dialogue continues
 func wait( seconds ):
-	_queue.push_back( [ funcref( self, \"_wait\" ), [ seconds ] ] )
+	_queue.push_back( [ \"_wait\", [ seconds ] ] )
 
 
 # Emit a signal when a point is reached
 func point_signal():
-	_queue.push_back( [ funcref( self, \"_point_signal\" ), [] ] )
+	_queue.push_back( [ \"_point_signal\", [] ] )
 
 
 # Retrieve a variable from the internal storage
@@ -122,6 +125,7 @@ func set_variable( variable_name, value ):
 func _start_dialogue( _delta ):
 	_running = true
 	_set_dialogue_visible( true )
+	DialogueText.visible_characters = 0
 
 
 func _stop_dialogue( _delta ):
@@ -130,11 +134,15 @@ func _stop_dialogue( _delta ):
 
 
 func _say( delta, text ):
-	DialogueText.append_bbcode( text ) # CHECK RETURN CODE = ERROR
-	DialogueText.visible_characters = 0
+	var err = DialogueText.append_bbcode( text )
+	if err:
+		print( \"Error in Dialogue Parsing: \" + err ) # Placeholder error checking
+	var visible = DialogueText.visible_characters
 	
+	delta = yield() # HACK: get_total_character_count() doesn't update til the next frame
 	while DialogueText.visible_characters < DialogueText.get_total_character_count():
-		DialogueText.visible_characters += _type_speed * delta
+		visible += _type_speed * delta
+		DialogueText.visible_characters = floor( visible )
 		delta = yield()
 
 
@@ -147,6 +155,7 @@ func _proceed( _delta ):
 		yield()
 	
 	_clear_box()
+	DialogueText.visible_characters = 0
 
 
 func _wait( _delta, seconds ):
@@ -163,18 +172,24 @@ func _point_signal( _delta ):
 
 # Clear the dialogue box
 func _clear_box():
-	pass # TODO
+	DialogueText.clear()
 
 
 # Set whether the dialogue is visible or not
 func _set_dialogue_visible( visibility ):
-	DialogueBoxBG.visible = visibility
+	if visibility:
+		DialogueBoxBG.show()
+		DialogueText.show()
+	else:
+		DialogueBoxBG.hide()
+		DialogueText.hide()
 "
 
 [node name="Dialogue" type="CanvasLayer"]
 script = SubResource( 1 )
 
 [node name="BoxBG" type="TextureRect" parent="."]
+visible = false
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -182,6 +197,7 @@ margin_top = -108.0
 texture = ExtResource( 1 )
 
 [node name="Text" type="RichTextLabel" parent="."]
+visible = false
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
