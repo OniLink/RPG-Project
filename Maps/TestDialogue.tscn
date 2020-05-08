@@ -1,6 +1,4 @@
-[gd_scene load_steps=3 format=2]
-
-[ext_resource path="res://DialogueEngine/DialogueBox.tscn" type="PackedScene" id=1]
+[gd_scene load_steps=2 format=2]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends Node2D
@@ -8,7 +6,7 @@ script/source = "extends Node2D
 
 var _test_avatar = ImageTexture.new()
 
-onready var Dia = $Dialogue
+onready var Dia = DialogueEngine
 
 
 func _ready():
@@ -16,7 +14,7 @@ func _ready():
 
 
 func _process( _delta ):
-	if Input.is_action_just_pressed( \"ui_accept\" ) and not Dia.is_running():
+	if Input.is_action_just_pressed( \"ui_accept\" ) and not Dia.is_running_or_just_stopped():
 		Dia.start()
 		Dia.set_text_speed( 60 )
 		Dia.set_name( \"Test Speaker\" )
@@ -33,5 +31,3 @@ func _process( _delta ):
 
 [node name="DialogueTest" type="Node2D"]
 script = SubResource( 1 )
-
-[node name="Dialogue" parent="." instance=ExtResource( 1 )]

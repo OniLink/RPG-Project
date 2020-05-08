@@ -20,6 +20,7 @@ var _current_state = null
 var _variables = {}
 
 var _running = false
+var _running_cached = false
 var _type_speed = 60
 
 onready var DialogueBoxBG = $BoxBG
@@ -33,6 +34,8 @@ func _ready():
 
 
 func _process( delta ):
+	_running_cached = is_running()
+	
 	# Execute the state
 	var finished = false
 	var state_updated = false
@@ -72,6 +75,14 @@ func _process( delta ):
 # Check if the dialogue engine is running
 func is_running():
 	return _running
+
+
+# Checks if the dialogue engine is running or if it's just stopped
+# Useful when you want to make sure you don't accidentally re-initiate dialogue
+# if your initiate dialogue button is set to ui_accept
+func is_running_or_just_stopped():
+	return is_running() or _running_cached
+
 
 # Start the dialogue engine
 func start():
