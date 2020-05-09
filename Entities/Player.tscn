@@ -61,7 +61,8 @@ func _state_default():
 	var velocity = get_motion()
 	
 	# Update the animation
-	sword_pivot.rotation = velocity.angle()
+	if velocity.length_squared() > 0:
+		sword_pivot.rotation = velocity.angle()
 	
 	# Move the player
 	velocity = move_and_slide( velocity )
@@ -133,7 +134,7 @@ tracks/1/keys = {
 "values": [ -45.0, 45.0 ]
 }
 tracks/2/type = "value"
-tracks/2/path = NodePath("SwordPivot/RotationHelper/HitBox/CollisionShape2D:disabled")
+tracks/2/path = NodePath("SwordPivot/RotationHelper/HitBox/HitMask:disabled")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/imported = false
@@ -155,14 +156,17 @@ script = SubResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="."]
 texture = ExtResource( 1 )
+offset = Vector2( 0, -16 )
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionMask" type="CollisionShape2D" parent="."]
+position = Vector2( 0, -16 )
 shape = SubResource( 2 )
 
 [node name="SwordPivot" type="Position2D" parent="."]
+position = Vector2( 0, -16 )
 
 [node name="RotationHelper" type="Node2D" parent="SwordPivot"]
-rotation = 0.785398
+rotation = -0.785398
 
 [node name="SwordSprite" type="Sprite" parent="SwordPivot/RotationHelper"]
 visible = false
@@ -173,7 +177,7 @@ offset = Vector2( 16, 0 )
 [node name="HitBox" type="Area2D" parent="SwordPivot/RotationHelper"]
 collision_mask = 8
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordPivot/RotationHelper/HitBox"]
+[node name="HitMask" type="CollisionShape2D" parent="SwordPivot/RotationHelper/HitBox"]
 position = Vector2( 32, 0 )
 shape = SubResource( 3 )
 disabled = true
@@ -189,6 +193,7 @@ anims/Attack = SubResource( 10 )
 anims/Idle = SubResource( 11 )
 
 [node name="HurtBox" type="Area2D" parent="."]
+position = Vector2( 0, -16 )
 collision_layer = 2
 collision_mask = 4
 
