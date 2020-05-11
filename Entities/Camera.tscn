@@ -1,0 +1,38 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node
+
+
+var _center = Vector2( 0.0, 0.0 )
+
+var _rotation = 0.0
+var _rot_center = Vector2( 0.0, 0.0 )
+
+var _updated = false
+
+
+func _ready():
+	pass
+
+
+func _process( _delta ):
+	if _updated:
+		_update_viewport()
+		_updated = false
+
+
+func set_camera_center( center ):
+	_center = center
+	_updated = true
+
+
+func _update_viewport():
+	# Update the transform
+	var transform = Transform2D.IDENTITY
+	transform = transform.translated( get_viewport().get_size() / 2 - _center )
+	get_viewport().set_canvas_transform( transform )
+"
+
+[node name="Camera" type="Node"]
+script = SubResource( 1 )
