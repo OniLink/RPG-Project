@@ -40,6 +40,43 @@ func _process( delta ):
 	get_viewport().set_canvas_transform( transform )
 
 
+func get_camera_center():
+	return _center
+
+
+func get_rotation():
+	return _rotation
+
+
+func get_rotation_pos():
+	return _rotation_pos
+
+
+func get_zoom():
+	return _zoom
+
+
+func get_zoom_pos():
+	return _zoom_pos
+
+
+func get_shake_magnitude():
+	return _shake_magnitude
+
+
+func get_shake_time():
+	return _shake_time
+
+
+func reset():
+	set_camera_center( Vector2( 0.0, 0.0 ) )
+	set_rotation( 0.0 )
+	set_rotation_pos( Vector2( 0.0, 0.0 ) )
+	set_zoom( 1.0 )
+	set_zoom_pos( Vector2( 0.0, 0.0 ) )
+	shake( 0.0, 0.0 )
+
+
 func rotate( rotation ):
 	_rotation += rotation
 
