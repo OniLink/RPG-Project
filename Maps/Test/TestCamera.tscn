@@ -40,16 +40,17 @@ var player = null
 func _ready():
 	camera = get_node( camera_path )
 	player = get_node( player_path )
+	camera.set_rotation_pos( Vector2( 50, 50 ) )
+	camera.set_zoom_pos( Vector2( -50, -50 ) )
 
 
 func _process( delta ):
 	camera.set_camera_center( player.position )
+	camera.rotate( delta * 0.1 )
 	
-	# TODO: Rotate seems to be not working like this.
-	#camera.translate( Vector2( 16*32, 9.5*32 ) )
-	#camera.rotate( delta )
-	#camera.translate( -Vector2( 16*32, 9.5*32 ) )
-	pass
+	if Input.is_action_just_pressed( \"ui_accept\" ):
+		camera.shake( 5.0, 1.0 )
+		camera.zoom( 1.1 )
 "
 
 [node name="World" type="YSort"]

@@ -5,33 +5,72 @@ script/source = "extends Node
 
 
 var _center = Vector2( 0.0, 0.0 )
-
 var _rotation = 0.0
-var _rot_center = Vector2( 0.0, 0.0 )
+var _zoom = 1.0
 
-var _updated = false
+var _rotation_pos = Vector2( 0.0, 0.0 )
+var _zoom_pos = Vector2( 0.0, 0.0 )
+
+var _shake_magnitude = 0.0
+var _shake_time = 0.0
 
 
 func _ready():
 	pass
 
 
-func _process( _delta ):
-	if _updated:
-		_update_viewport()
-		_updated = false
+func _process( delta ):
+	var transform = Transform2D.IDENTITY
+	transform.origin -= _center
+	
+	transform.origin -= _zoom_pos
+	transform = transform.scaled( Vector2( _zoom, _zoom ) )
+	transform.origin += _zoom_pos
+	
+	transform.origin -= _rotation_pos
+	transform = transform.rotated( _rotation )
+	transform.origin += _rotation_pos
+	
+	transform.origin += get_viewport().get_size() / 2
+	
+	if _shake_time > 0.0:
+		transform = transform.translated( _shake_magnitude * Vector2( rand_range( -1.0, 1.0 ), rand_range( -1.0, 1.0 ) ) )
+		_shake_time -= delta
+	
+	get_viewport().set_canvas_transform( transform )
+
+
+func rotate( rotation ):
+	_rotation += rotation
 
 
 func set_camera_center( center ):
 	_center = center
-	_updated = true
 
 
-func _update_viewport():
-	# Update the transform
-	var transform = Transform2D.IDENTITY
-	transform = transform.translated( get_viewport().get_size() / 2 - _center )
-	get_viewport().set_canvas_transform( transform )
+func set_rotation( rotation ):
+	_rotation = rotation
+
+
+func set_rotation_pos( rotation_pos ):
+	_rotation_pos = rotation_pos
+
+
+func set_zoom_pos( zoom_pos ):
+	_zoom_pos = zoom_pos
+
+
+func shake( magnitude, time ):
+	_shake_magnitude = magnitude
+	_shake_time = time
+
+
+func set_zoom( zoom_factor ):
+	_zoom = zoom_factor
+
+
+func zoom( zoom_factor ):
+	_zoom *= zoom_factor
 "
 
 [node name="Camera" type="Node"]
