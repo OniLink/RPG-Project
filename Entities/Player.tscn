@@ -20,6 +20,7 @@ const VELOCITY_RUN_MOD = 1.5
 var _state = State.DEFAULT
 
 
+onready var Camera = GameCamera
 onready var AnimationTree = $AnimationTree
 onready var AnimationStateMachine = AnimationTree[ \"parameters/playback\" ]
 onready var sword_pivot = $SwordPivot
@@ -71,6 +72,9 @@ func _state_default():
 	if Input.is_action_just_pressed( \"pl_melee\" ):
 		AnimationStateMachine.travel( \"Attack\" )
 		_state = State.MELEE
+	
+	# Update the camera
+	Camera.set_camera_center( position )
 
 
 func _state_melee():

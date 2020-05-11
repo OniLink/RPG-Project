@@ -34,7 +34,7 @@ func _process( delta ):
 	transform.origin += get_viewport().get_size() / 2
 	
 	if _shake_time > 0.0:
-		transform = transform.translated( _shake_magnitude * Vector2( rand_range( -1.0, 1.0 ), rand_range( -1.0, 1.0 ) ) )
+		transform.origin += _shake_magnitude * Vector2( rand_range( -1.0, 1.0 ), rand_range( -1.0, 1.0 ) )
 		_shake_time -= delta
 	
 	get_viewport().set_canvas_transform( transform )

@@ -24,7 +24,8 @@ mix_rate=48000
 
 [autoload]
 
-DialogueEngine="*res://DialogueEngine/DialogueBox.tscn"
+DialogueEngine="*res://Entities/DialogueEngine.tscn"
+GameCamera="*res://Entities/Camera.tscn"
 
 [debug]
 
