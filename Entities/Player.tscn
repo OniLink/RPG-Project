@@ -18,6 +18,7 @@ const VELOCITY_RUN_MOD = 1.5
 
 
 var _state = State.DEFAULT
+var _run_toggle = false
 
 
 onready var Camera = GameCamera
@@ -49,12 +50,22 @@ func _physics_process( _delta ):
 # Get the motion-related input
 func get_motion():
 	var velocity = Vector2( 0, 0 )
+
 	velocity.x = Input.get_action_strength( \"pl_right\" ) - Input.get_action_strength( \"pl_left\" )
 	velocity.y = Input.get_action_strength( \"pl_down\" ) - Input.get_action_strength( \"pl_up\" )
+
 	if velocity.length_squared() > 1:
 		velocity = velocity.normalized()
 	
-	return velocity * VELOCITY_WALK
+	velocity *= VELOCITY_WALK
+	
+	if Input.is_action_just_pressed( \"pl_run_toggle\" ):
+		_run_toggle = !_run_toggle
+	
+	if Input.is_action_pressed( \"pl_run\" ) != _run_toggle: # If run is toggled on, run button walks. Otherwise, run button runs.
+		velocity *= VELOCITY_RUN_MOD
+	
+	return velocity
 
 
 func _state_default():
