@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://Sprites/Placeholder-32x32.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/Placeholder-8x32.png" type="Texture" id=2]
@@ -19,22 +19,19 @@ const VELOCITY_RUN_MOD = 1.5
 
 var _state = State.DEFAULT
 var _run_toggle = false
+var _interactable_body = null
 
 
 onready var Camera = GameCamera
 onready var AnimationTree = $AnimationTree
 onready var AnimationStateMachine = AnimationTree[ \"parameters/playback\" ]
-onready var sword_pivot = $SwordPivot
+onready var InteractionBox = $InteractionBox
+onready var Sword = $Sword
 
 
 # Initialize the player
 func _ready():
 	pass
-
-
-# Frame update
-#func _process( delta ):
-#	pass
 
 
 # Physics update
@@ -68,30 +65,56 @@ func get_motion():
 	return velocity
 
 
+# Check if there is an interaction available
+func is_interact_enabled():
+	return _interactable_body != null
+
+
+# Default State
 func _state_default():
 	# Get the motion
 	var velocity = get_motion()
 	
 	# Update the animation
 	if velocity.length_squared() > 0:
-		sword_pivot.rotation = velocity.angle()
+		Sword.rotation = velocity.angle()
 	
 	# Move the player
 	velocity = move_and_slide( velocity )
 	
 	# Update the state if needed
-	if Input.is_action_just_pressed( \"pl_melee\" ):
-		AnimationStateMachine.travel( \"Attack\" )
+	if Input.is_action_just_pressed( \"pl_interact\" ) and is_interact_enabled():
+		# Interact state
+		pass
+	elif Input.is_action_just_pressed( \"pl_melee\" ):
+		# Melee attack state
+		AnimationStateMachine.travel( \"AttackMelee\" )
 		_state = State.MELEE
+	elif Input.is_action_just_pressed( \"pl_ranged\" ):
+		# Ranged attack state
+		pass
 	
 	# Update the camera
 	Camera.set_camera_center( position )
 
 
+# Melee State
 func _state_melee():
 	# Return to default after the animation ends
-	if AnimationStateMachine.get_current_node() != \"Attack\":
+	if AnimationStateMachine.get_current_node() != \"AttackMelee\":
 		_state = State.DEFAULT
+
+
+# Acquire interactable body
+# Assumption: Only one body will enter the area at a time
+func _on_InteractionBox_body_entered( body ):
+	_interactable_body = body
+
+
+# Lose interactable body
+# Assumption: Only one body will enter the area at a time
+func _on_InteractionBox_body_exited( _body ):
+	_interactable_body = null
 "
 
 [sub_resource type="CircleShape2D" id=2]
@@ -113,19 +136,20 @@ switch_mode = 2
 auto_advance = true
 
 [sub_resource type="AnimationNodeStateMachine" id=8]
-states/Attack/node = SubResource( 4 )
-states/Attack/position = Vector2( 543, 148 )
+states/AttackMelee/node = SubResource( 4 )
+states/AttackMelee/position = Vector2( 543, 148 )
 states/Idle/node = SubResource( 5 )
 states/Idle/position = Vector2( 227, 148 )
-transitions = [ "Idle", "Attack", SubResource( 6 ), "Attack", "Idle", SubResource( 7 ) ]
+transitions = [ "Idle", "AttackMelee", SubResource( 6 ), "AttackMelee", "Idle", SubResource( 7 ) ]
 start_node = "Idle"
 
 [sub_resource type="AnimationNodeStateMachinePlayback" id=9]
 
 [sub_resource type="Animation" id=10]
+resource_name = "AttackMelee"
 length = 0.2
 tracks/0/type = "value"
-tracks/0/path = NodePath("SwordPivot/RotationHelper/SwordSprite:visible")
+tracks/0/path = NodePath("Sword/RotationHelper/SwordSprite:visible")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/imported = false
@@ -137,7 +161,7 @@ tracks/0/keys = {
 "values": [ true, false ]
 }
 tracks/1/type = "value"
-tracks/1/path = NodePath("SwordPivot/RotationHelper:rotation_degrees")
+tracks/1/path = NodePath("Sword/RotationHelper:rotation_degrees")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/imported = false
@@ -149,7 +173,7 @@ tracks/1/keys = {
 "values": [ -45.0, 45.0 ]
 }
 tracks/2/type = "value"
-tracks/2/path = NodePath("SwordPivot/RotationHelper/HitBox/HitMask:disabled")
+tracks/2/path = NodePath("Sword/RotationHelper/HitBox/HitMask:disabled")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/imported = false
@@ -166,6 +190,10 @@ tracks/2/keys = {
 [sub_resource type="CircleShape2D" id=12]
 radius = 16.0
 
+[sub_resource type="SegmentShape2D" id=13]
+a = Vector2( 16, -16 )
+b = Vector2( 64, -16 )
+
 [node name="Player" type="KinematicBody2D"]
 script = SubResource( 1 )
 
@@ -177,25 +205,23 @@ offset = Vector2( 0, -16 )
 position = Vector2( 0, -16 )
 shape = SubResource( 2 )
 
-[node name="SwordPivot" type="Position2D" parent="."]
+[node name="Sword" type="Position2D" parent="."]
 position = Vector2( 0, -16 )
 
-[node name="RotationHelper" type="Node2D" parent="SwordPivot"]
+[node name="RotationHelper" type="Node2D" parent="Sword"]
 rotation = -0.785398
 
-[node name="SwordSprite" type="Sprite" parent="SwordPivot/RotationHelper"]
-visible = false
+[node name="SwordSprite" type="Sprite" parent="Sword/RotationHelper"]
 position = Vector2( 16, 0 )
 texture = ExtResource( 2 )
 offset = Vector2( 16, 0 )
 
-[node name="HitBox" type="Area2D" parent="SwordPivot/RotationHelper"]
+[node name="HitBox" type="Area2D" parent="Sword/RotationHelper"]
 collision_mask = 8
 
-[node name="HitMask" type="CollisionShape2D" parent="SwordPivot/RotationHelper/HitBox"]
+[node name="HitMask" type="CollisionShape2D" parent="Sword/RotationHelper/HitBox"]
 position = Vector2( 32, 0 )
 shape = SubResource( 3 )
-disabled = true
 
 [node name="AnimationTree" type="AnimationTree" parent="."]
 tree_root = SubResource( 8 )
@@ -204,7 +230,7 @@ active = true
 parameters/playback = SubResource( 9 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/Attack = SubResource( 10 )
+anims/AttackMelee = SubResource( 10 )
 anims/Idle = SubResource( 11 )
 
 [node name="HurtBox" type="Area2D" parent="."]
@@ -214,3 +240,12 @@ collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
 shape = SubResource( 12 )
+
+[node name="InteractionBox" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 32
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionBox"]
+shape = SubResource( 13 )
+[connection signal="body_entered" from="InteractionBox" to="." method="_on_InteractionBox_body_entered"]
+[connection signal="body_exited" from="InteractionBox" to="." method="_on_InteractionBox_body_exited"]
