@@ -70,6 +70,13 @@ func is_interact_enabled():
 	return _interactable_body != null
 
 
+# Set the current state to new_state
+func set_state( new_state ):
+	_on_state_end( _state )
+	_state = new_state
+	_on_state_begin( _state )
+
+
 # Default State
 func _state_default():
 	# Get the motion
@@ -84,12 +91,10 @@ func _state_default():
 	
 	# Update the state if needed
 	if Input.is_action_just_pressed( \"pl_interact\" ) and is_interact_enabled():
-		# Interact state
-		pass
+		_interactable_body.on_interact( self ) # Interactable bodies need an on_interact() method
 	elif Input.is_action_just_pressed( \"pl_melee\" ):
 		# Melee attack state
-		AnimationStateMachine.travel( \"AttackMelee\" )
-		_state = State.MELEE
+		set_state( State.MELEE )
 	elif Input.is_action_just_pressed( \"pl_ranged\" ):
 		# Ranged attack state
 		pass
@@ -103,6 +108,26 @@ func _state_melee():
 	# Return to default after the animation ends
 	if AnimationStateMachine.get_current_node() != \"AttackMelee\":
 		_state = State.DEFAULT
+
+
+# Begin a new state
+func _on_state_begin( state ):
+	match state:
+		State.DEFAULT:
+			pass
+		
+		State.MELEE:
+			AnimationStateMachine.travel( \"AttackMelee\" )
+
+
+# Ends a state
+func _on_state_end( state ):
+	match state:
+		State.DEFAULT:
+			pass
+		
+		State.MELEE:
+			pass
 
 
 # Acquire interactable body
