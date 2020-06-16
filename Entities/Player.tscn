@@ -226,8 +226,8 @@ tracks/2/keys = {
 radius = 16.0
 
 [sub_resource type="SegmentShape2D" id=13]
-a = Vector2( 16, -16 )
-b = Vector2( 64, -16 )
+a = Vector2( 16, 0 )
+b = Vector2( 64, 0 )
 
 [node name="Player" type="KinematicBody2D"]
 collision_layer = 524288
@@ -236,14 +236,11 @@ script = SubResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="."]
 texture = ExtResource( 1 )
-offset = Vector2( 0, -16 )
 
 [node name="CollisionMask" type="CollisionShape2D" parent="."]
-position = Vector2( 0, -16 )
 shape = SubResource( 2 )
 
 [node name="Sword" type="Position2D" parent="."]
-position = Vector2( 0, -16 )
 
 [node name="RotationHelper" type="Node2D" parent="Sword"]
 rotation = 0.785398
@@ -273,7 +270,6 @@ anims/AttackMelee = SubResource( 10 )
 anims/Idle = SubResource( 11 )
 
 [node name="HurtBox" type="Area2D" parent="."]
-position = Vector2( 0, -16 )
 collision_layer = 2
 collision_mask = 4
 
