@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Sprites/Tilesets/Overworld-Placeholder.png" type="Texture" id=1]
 [ext_resource path="res://Entities/Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Entities/Test/TestNPC.tscn" type="PackedScene" id=3]
 
 [sub_resource type="TileSet" id=1]
 0/name = "Overworld-Placeholder.png 0"
@@ -36,3 +37,6 @@ tile_data = PoolIntArray( 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0, 4, 0, 0, 5, 0, 0, 
 
 [node name="Player" parent="." instance=ExtResource( 2 )]
 position = Vector2( 305.045, 199.452 )
+
+[node name="TestNPC" parent="." instance=ExtResource( 3 )]
+position = Vector2( 520.753, 217.432 )
