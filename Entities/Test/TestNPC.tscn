@@ -6,14 +6,28 @@
 script/source = "extends KinematicBody2D
 
 
+onready var Dia = DialogueEngine
+
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	pass
 
 
 # Respond to player interaction
-func on_interact( _player ):
-	print( \"Interaction received\" )
+func on_interact( player ):
+	# Freeze the player in place
+	player.set_state( player.State.SCRIPTED )
+	
+	# Dialogue
+	Dia.start()
+	Dia.say( \"Hello! Welcome to Our Village!\" )
+	Dia.proceed()
+	Dia.stop()
+	yield( Dia, \"queue_flushed\" ) # Wait until the dialogue finishes
+	
+	# Unfreeze the player
+	player.set_state( player.State.DEFAULT )
 "
 
 [sub_resource type="CircleShape2D" id=1]

@@ -9,7 +9,8 @@ script/source = "extends KinematicBody2D
 
 enum State {
 	DEFAULT,
-	MELEE
+	MELEE,
+	SCRIPTED
 }
 
 
@@ -42,6 +43,9 @@ func _physics_process( _delta ):
 		State.MELEE:
 			_state_melee()
 			
+		State.SCRIPTED:
+			_state_scripted()
+		
 		_:
 			pass
 
@@ -112,6 +116,11 @@ func _state_melee():
 		_state = State.DEFAULT
 
 
+# Scripted state (nothing happens, the player is under external control)
+func _state_scripted():
+	pass
+
+
 # Begin a new state
 func _on_state_begin( state ):
 	match state:
@@ -120,6 +129,9 @@ func _on_state_begin( state ):
 		
 		State.MELEE:
 			AnimationStateMachine.travel( \"AttackMelee\" )
+		
+		State.SCRIPTED:
+			pass
 		
 		_:
 			pass
@@ -132,6 +144,9 @@ func _on_state_end( state ):
 			pass
 		
 		State.MELEE:
+			pass
+		
+		State.SCRIPTED:
 			pass
 		
 		_:
