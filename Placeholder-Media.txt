@@ -1,1 +1,2 @@
-Sprites/Tilesets/Overworld-Placeholder.png - OpenGameArt, ArMM1998, Public Domain
+Sprites/Tilesets/Tiles-Placeholder.png - Programmer "Art" (it's solid colors what do you want from me)
+Sprites/Characters/Character-Placeholder.png - OpenGameArt, ArMM1998, CC0 (Public Domain)

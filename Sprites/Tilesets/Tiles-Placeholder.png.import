@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/Overworld-Placeholder.png-020a2cfac3f54295813b13b8063382e9.stex"
+path="res://.import/Tiles-Placeholder.png-2d04c54f5245568fd0a9d459f565d8da.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Tilesets/Overworld-Placeholder.png"
-dest_files=[ "res://.import/Overworld-Placeholder.png-020a2cfac3f54295813b13b8063382e9.stex" ]
+source_file="res://Sprites/Tilesets/Tiles-Placeholder.png"
+dest_files=[ "res://.import/Tiles-Placeholder.png-2d04c54f5245568fd0a9d459f565d8da.stex" ]
 
 [params]
 

@@ -1,6 +1,6 @@
-[gd_scene load_steps=16 format=2]
+[gd_scene load_steps=34 format=2]
 
-[ext_resource path="res://Sprites/Placeholder-32x32.png" type="Texture" id=1]
+[ext_resource path="res://Sprites/Characters/Character-Placeholder.png" type="Texture" id=1]
 [ext_resource path="res://Sprites/Placeholder-8x32.png" type="Texture" id=2]
 
 [sub_resource type="GDScript" id=1]
@@ -25,8 +25,9 @@ var _interactable_body = null
 
 onready var Camera = GameCamera
 onready var AnimationTree = $AnimationTree
-onready var AnimationStateMachine = AnimationTree[ \"parameters/playback\" ]
 onready var RotationHelper = $RotationHelper
+
+onready var AnimationStateMachine = AnimationTree[ \"parameters/playback\" ]
 
 
 # Initialize the player
@@ -88,9 +89,13 @@ func _state_default():
 	# Get the motion
 	var velocity = get_motion()
 	
-	# Update the internal rotations
+	# Update things that depend on the velocity's direction
 	if velocity.length_squared() > 0:
 		RotationHelper.rotation = velocity.angle()
+		_update_animation_blendtree( velocity.normalized() )
+	
+	# Update the animation
+	_update_animation_default( velocity.length_squared() )
 	
 	# Move the player
 	velocity = move_and_slide( velocity )
@@ -113,7 +118,7 @@ func _state_default():
 func _state_melee():
 	# Return to default after the animation ends
 	if AnimationStateMachine.get_current_node() != \"AttackMelee\":
-		_state = State.DEFAULT
+		set_state( State.DEFAULT )
 
 
 # Scripted state (nothing happens, the player is under external control)
@@ -128,7 +133,7 @@ func _on_state_begin( state ):
 			pass
 		
 		State.MELEE:
-			AnimationStateMachine.travel( \"AttackMelee\" )
+			AnimationStateMachine.start( \"AttackMelee\" )
 		
 		State.SCRIPTED:
 			pass
@@ -153,6 +158,22 @@ func _on_state_end( state ):
 			pass
 
 
+# Update the animation blendtrees so the right animations are picked
+func _update_animation_blendtree( direction ):
+	AnimationTree[ \"parameters/Idle/blend_position\" ] = direction
+	AnimationTree[ \"parameters/Walk/blend_position\" ] = direction
+
+
+# Update the animation in the default state
+func _update_animation_default( vel_sq ):
+	var desired_animation = \"Idle\"
+	if vel_sq > 0:
+		desired_animation = \"Walk\"
+		
+	if AnimationStateMachine.get_current_node() != desired_animation:
+		AnimationStateMachine.travel( desired_animation )
+
+
 # Acquire interactable body
 # Assumption: Only one body will enter the area at a time
 func _on_InteractionBox_body_entered( body ):
@@ -165,32 +186,83 @@ func _on_InteractionBox_body_exited( _body ):
 	_interactable_body = null
 "
 
-[sub_resource type="CircleShape2D" id=2]
-radius = 16.0
+[sub_resource type="CapsuleShape2D" id=36]
+radius = 4.0
+height = 16.0
 
-[sub_resource type="AnimationNodeAnimation" id=4]
+[sub_resource type="AnimationNodeAnimation" id=3]
 animation = "AttackMelee"
 
-[sub_resource type="AnimationNodeAnimation" id=5]
-animation = "Idle"
+[sub_resource type="AnimationNodeAnimation" id=17]
+animation = "IdleDown"
 
-[sub_resource type="AnimationNodeStateMachineTransition" id=6]
+[sub_resource type="AnimationNodeAnimation" id=18]
+animation = "IdleUp"
 
-[sub_resource type="AnimationNodeStateMachineTransition" id=7]
+[sub_resource type="AnimationNodeAnimation" id=21]
+animation = "IdleLeft"
+
+[sub_resource type="AnimationNodeAnimation" id=22]
+animation = "IdleRight"
+
+[sub_resource type="AnimationNodeBlendSpace2D" id=14]
+blend_point_0/node = SubResource( 17 )
+blend_point_0/pos = Vector2( 0, 1 )
+blend_point_1/node = SubResource( 18 )
+blend_point_1/pos = Vector2( 0, -1 )
+blend_point_2/node = SubResource( 21 )
+blend_point_2/pos = Vector2( -1, 0 )
+blend_point_3/node = SubResource( 22 )
+blend_point_3/pos = Vector2( 1, 0 )
+snap = Vector2( 0.1, 1 )
+blend_mode = 1
+
+[sub_resource type="AnimationNodeAnimation" id=29]
+animation = "WalkDown"
+
+[sub_resource type="AnimationNodeAnimation" id=31]
+animation = "WalkRight"
+
+[sub_resource type="AnimationNodeAnimation" id=33]
+animation = "WalkUp"
+
+[sub_resource type="AnimationNodeAnimation" id=35]
+animation = "WalkLeft"
+
+[sub_resource type="AnimationNodeBlendSpace2D" id=26]
+blend_point_0/node = SubResource( 29 )
+blend_point_0/pos = Vector2( 0, 1 )
+blend_point_1/node = SubResource( 31 )
+blend_point_1/pos = Vector2( 1, 0 )
+blend_point_2/node = SubResource( 33 )
+blend_point_2/pos = Vector2( 0, -1 )
+blend_point_3/node = SubResource( 35 )
+blend_point_3/pos = Vector2( -1, 0 )
+blend_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=23]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=24]
 switch_mode = 2
 auto_advance = true
 
-[sub_resource type="AnimationNodeStateMachine" id=8]
-states/AttackMelee/node = SubResource( 4 )
-states/AttackMelee/position = Vector2( 517, 128 )
-states/Idle/node = SubResource( 5 )
-states/Idle/position = Vector2( 255, 128 )
-transitions = [ "Idle", "AttackMelee", SubResource( 6 ), "AttackMelee", "Idle", SubResource( 7 ) ]
+[sub_resource type="AnimationNodeStateMachineTransition" id=27]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=28]
+
+[sub_resource type="AnimationNodeStateMachine" id=7]
+states/AttackMelee/node = SubResource( 3 )
+states/AttackMelee/position = Vector2( 813, 306 )
+states/Idle/node = SubResource( 14 )
+states/Idle/position = Vector2( 320, 295 )
+states/Walk/node = SubResource( 26 )
+states/Walk/position = Vector2( 326, 474 )
+transitions = [ "Idle", "AttackMelee", SubResource( 23 ), "AttackMelee", "Idle", SubResource( 24 ), "Walk", "Idle", SubResource( 27 ), "Idle", "Walk", SubResource( 28 ) ]
 start_node = "Idle"
 
-[sub_resource type="AnimationNodeStateMachinePlayback" id=9]
+[sub_resource type="AnimationNodeStateMachinePlayback" id=8]
 
-[sub_resource type="Animation" id=10]
+[sub_resource type="Animation" id=9]
 resource_name = "AttackMelee"
 length = 0.2
 tracks/0/type = "value"
@@ -230,9 +302,11 @@ tracks/2/keys = {
 "values": [ -45.0, 45.0 ]
 }
 
-[sub_resource type="Animation" id=11]
+[sub_resource type="Animation" id=16]
+resource_name = "IdleDown"
+length = 0.1
 tracks/0/type = "value"
-tracks/0/path = NodePath("RotationHelper/Sword/SwordSprite:visible")
+tracks/0/path = NodePath("Sprite:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/imported = false
@@ -241,17 +315,132 @@ tracks/0/keys = {
 "times": PoolRealArray( 0 ),
 "transitions": PoolRealArray( 1 ),
 "update": 1,
-"values": [ false ]
+"values": [ 0 ]
 }
 
-[sub_resource type="CircleShape2D" id=12]
+[sub_resource type="Animation" id=19]
+resource_name = "IdleLeft"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 12 ]
+}
+
+[sub_resource type="Animation" id=20]
+resource_name = "IdleRight"
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 4 ]
+}
+
+[sub_resource type="Animation" id=15]
+resource_name = "IdleUp"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ 8 ]
+}
+
+[sub_resource type="Animation" id=25]
+resource_name = "WalkDown"
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 0, 1, 2, 3 ]
+}
+
+[sub_resource type="Animation" id=34]
+resource_name = "WalkLeft"
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 12, 13, 14, 15 ]
+}
+
+[sub_resource type="Animation" id=30]
+resource_name = "WalkRight"
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 4, 5, 6, 7 ]
+}
+
+[sub_resource type="Animation" id=32]
+resource_name = "WalkUp"
+length = 0.4
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 8, 9, 10, 11 ]
+}
+
+[sub_resource type="CircleShape2D" id=11]
 radius = 16.0
 
-[sub_resource type="SegmentShape2D" id=13]
+[sub_resource type="SegmentShape2D" id=12]
 a = Vector2( 16, 0 )
 b = Vector2( 64, 0 )
 
-[sub_resource type="RectangleShape2D" id=3]
+[sub_resource type="RectangleShape2D" id=13]
 extents = Vector2( 16, 2 )
 
 [node name="Player" type="KinematicBody2D"]
@@ -260,27 +449,43 @@ collision_mask = 524288
 script = SubResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="."]
+position = Vector2( 0, -4 )
+scale = Vector2( 2, 2 )
 texture = ExtResource( 1 )
+vframes = 4
+hframes = 4
+frame = 11
 
 [node name="CollisionMask" type="CollisionShape2D" parent="."]
-shape = SubResource( 2 )
+position = Vector2( 0, 16 )
+rotation = 1.5708
+shape = SubResource( 36 )
 
 [node name="AnimationTree" type="AnimationTree" parent="."]
-tree_root = SubResource( 8 )
+tree_root = SubResource( 7 )
 anim_player = NodePath("../AnimationPlayer")
 active = true
-parameters/playback = SubResource( 9 )
+parameters/playback = SubResource( 8 )
+parameters/Idle/blend_position = Vector2( -1, -0.0028249 )
+parameters/Walk/blend_position = Vector2( 0, 0 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/AttackMelee = SubResource( 10 )
-anims/Idle = SubResource( 11 )
+anims/AttackMelee = SubResource( 9 )
+anims/IdleDown = SubResource( 16 )
+anims/IdleLeft = SubResource( 19 )
+anims/IdleRight = SubResource( 20 )
+anims/IdleUp = SubResource( 15 )
+anims/WalkDown = SubResource( 25 )
+anims/WalkLeft = SubResource( 34 )
+anims/WalkRight = SubResource( 30 )
+anims/WalkUp = SubResource( 32 )
 
 [node name="HurtBox" type="Area2D" parent="."]
 collision_layer = 2
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
-shape = SubResource( 12 )
+shape = SubResource( 11 )
 
 [node name="RotationHelper" type="Node2D" parent="."]
 
@@ -289,12 +494,13 @@ collision_layer = 16
 collision_mask = 32
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RotationHelper/InteractionBox"]
-shape = SubResource( 13 )
+shape = SubResource( 12 )
 
 [node name="Sword" type="Node2D" parent="RotationHelper"]
-rotation = -0.785398
+rotation = 0.785398
 
 [node name="SwordSprite" type="Sprite" parent="RotationHelper/Sword"]
+visible = false
 position = Vector2( 16, 0 )
 texture = ExtResource( 2 )
 offset = Vector2( 16, 0 )
@@ -304,6 +510,7 @@ collision_mask = 8
 
 [node name="HitMask" type="CollisionShape2D" parent="RotationHelper/Sword/HitBox"]
 position = Vector2( 32, 0 )
-shape = SubResource( 3 )
+shape = SubResource( 13 )
+disabled = true
 [connection signal="body_entered" from="RotationHelper/InteractionBox" to="." method="_on_InteractionBox_body_entered"]
 [connection signal="body_exited" from="RotationHelper/InteractionBox" to="." method="_on_InteractionBox_body_exited"]
