@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/Tiles-Placeholder.png-2d04c54f5245568fd0a9d459f565d8da.stex"
+path="res://.import/OutdoorGrass.png-b4ad3fdb0d46b2148235d1f5fb8037a3.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Tilesets/Tiles-Placeholder.png"
-dest_files=[ "res://.import/Tiles-Placeholder.png-2d04c54f5245568fd0a9d459f565d8da.stex" ]
+source_file="res://Sprites/Tilesets/OutdoorGrass.png"
+dest_files=[ "res://.import/OutdoorGrass.png-b4ad3fdb0d46b2148235d1f5fb8037a3.stex" ]
 
 [params]
 
